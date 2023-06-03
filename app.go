@@ -31,7 +31,7 @@ func (a *App) Poll(ctx context.Context) (uint, error) {
 	a.l.Print("What Fibonacci number would you like to know: ")
 
 	var n uint
-	_, err := fmt.Fscanf(a.r, "%d\n", n)
+	_, err := fmt.Fscanf(a.r, "%d\n", &n)
 	return n, err
 }
 
@@ -40,6 +40,6 @@ func (a *App) Write(ctx context.Context, n uint) {
 	if err != nil {
 		a.l.Printf("Fibonacci(%d): %v\n", n, err)
 	} else {
-		a.l.Printf("Fibonacci(%d) = %d", n, f)
+		a.l.Printf("Fibonacci(%d) = %d\n", n, f)
 	}
 }
