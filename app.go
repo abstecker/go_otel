@@ -4,8 +4,10 @@ import (
 	"context"
 	"fmt"
 	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
 	"io"
 	"log"
+	"strconv"
 )
 
 const name = "trace"
@@ -35,10 +37,17 @@ func (a *App) Run(ctx context.Context) error {
 }
 
 func (a *App) Poll(ctx context.Context) (uint, error) {
+	_, span := otel.Tracer(name).Start(ctx, "Poll")
+	defer span.End()
+
 	a.l.Print("What Fibonacci number would you like to know: ")
 
 	var n uint
 	_, err := fmt.Fscanf(a.r, "%d\n", &n)
+
+	nStr := strconv.FormatUint(uint64(n), 10)
+	span.SetAttributes(attribute.String("request.n", nStr))
+	
 	return n, err
 }
 
