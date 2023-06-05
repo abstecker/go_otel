@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 	"io"
 	"log"
 	"strconv"
@@ -47,12 +48,21 @@ func (a *App) Poll(ctx context.Context) (uint, error) {
 
 	nStr := strconv.FormatUint(uint64(n), 10)
 	span.SetAttributes(attribute.String("request.n", nStr))
-	
+
 	return n, err
 }
 
 func (a *App) Write(ctx context.Context, n uint) {
-	f, err := Fibonacci(n)
+	var span trace.Span
+	ctx, span = otel.Tracer(name).Start(ctx, "Write")
+	defer span.End()
+
+	f, err := func(ctx context.Context) (uint64, error) {
+		_, span := otel.Tracer(name).Start(ctx, "Fibonacci")
+		defer span.End()
+		return Fibonacci(n)
+	}(ctx)
+
 	if err != nil {
 		a.l.Printf("Fibonacci(%d): %v\n", n, err)
 	} else {
