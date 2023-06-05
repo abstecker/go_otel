@@ -3,9 +3,12 @@ package main
 import (
 	"context"
 	"fmt"
+	"go.opentelemetry.io/otel"
 	"io"
 	"log"
 )
+
+const name = "trace"
 
 type App struct {
 	r io.Reader
@@ -18,12 +21,16 @@ func NewApp(r io.Reader, l *log.Logger) *App {
 
 func (a *App) Run(ctx context.Context) error {
 	for {
-		n, err := a.Poll(ctx)
+		newCtx, span := otel.Tracer(name).Start(ctx, "Run")
+
+		n, err := a.Poll(newCtx)
 		if err != nil {
+			span.End()
 			return err
 		}
 
 		a.Write(ctx, n)
+		span.End()
 	}
 }
 
